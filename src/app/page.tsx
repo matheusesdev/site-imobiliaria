@@ -1,103 +1,96 @@
-import Image from "next/image";
+// src/app/page.tsx
 
-export default function Home() {
+import Link from 'next/link';
+import prisma from '@/lib/prisma';
+import { Imovel } from '@prisma/client';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import Image from 'next/image';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+
+interface HomePageProps {
+  searchParams: {
+    busca?: string;
+    quartos?: string;
+  }
+}
+
+export default async function Home({ searchParams }: HomePageProps) {
+  const { busca, quartos } = searchParams || {};
+  const minQuartos = Number(quartos) || 0;
+
+  const where: any = { AND: [] };
+  if (busca) { where.AND.push({ OR: [ { endereco: { contains: busca, mode: 'insensitive' } }, { cidade: { contains: busca, mode: 'insensitive' } } ] }); }
+  if (minQuartos > 0) { where.AND.push({ quartos: { gte: minQuartos } }); }
+
+  const imoveis = await prisma.imovel.findMany({
+    where: where.AND.length > 0 ? where : undefined,
+    orderBy: { criadoEm: 'desc' },
+  });
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <>
+      <section className="relative h-[60vh] flex items-center justify-center text-center text-white bg-brand-primary">
+        <div className="absolute inset-0">
+          <Image
+            src="https://images.unsplash.com/photo-1568605114967-8130f3a36994"
+            alt="Casa moderna com uma bela arquitetura"
+            fill
+            className="object-cover opacity-40"
+            priority
+          />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+        <div className="relative z-10 p-4">
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight font-display">Seu novo lar está aqui.</h1>
+          <p className="mt-4 text-lg md:text-xl max-w-2xl mx-auto">A plataforma definitiva para encontrar, comprar e vender imóveis com confiança e segurança.</p>
+          <Card className="mt-8 max-w-2xl mx-auto bg-black/30 backdrop-blur-sm border-gray-400">
+            <CardContent className="p-4">
+              <form className="flex flex-col sm:flex-row items-center gap-4">
+                <Input className="bg-white text-gray-800 placeholder:text-gray-500 flex-grow" name="busca" placeholder="Busque por endereço ou cidade..." defaultValue={busca}/>
+                <Input className="bg-white text-gray-800 placeholder:text-gray-500 w-full sm:w-auto" name="quartos" type="number" min="0" placeholder="Quartos (mín.)" defaultValue={quartos}/>
+                <Button type="submit" className="w-full sm:w-auto bg-brand-accent hover:bg-brand-accent/90">Buscar</Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      <section className="py-12 bg-brand-light">
+        <div className="container mx-auto px-4 md:px-8">
+          <h2 className="text-3xl font-bold mb-8 text-center font-display text-brand-primary">Imóveis em Destaque</h2>
+          {imoveis.length === 0 ? (
+            <p className="text-center text-gray-500">Nenhum imóvel encontrado com esses filtros.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {imoveis.map((imovel: Imovel) => (
+                <Link href={`/imovel/${imovel.id}`} key={imovel.id} className="block">
+                  <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 bg-white">
+                    {/* AQUI ESTÁ A CORREÇÃO: O container da imagem agora é 'relative' */}
+                    <div className="relative w-full h-56">
+                      {imovel.imagemUrl ? (
+                          <Image src={imovel.imagemUrl} alt={`Foto do imóvel: ${imovel.endereco}`} fill className="object-cover"/>
+                        ) : (
+                          <div className="w-full h-full bg-gray-200 flex items-center justify-center"><p className="text-gray-500">Sem foto</p></div>
+                        )}
+                    </div>
+                    <div className="p-4">
+                      <CardHeader className='p-0'>
+                        <CardTitle className="text-lg font-display text-brand-primary line-clamp-2">{imovel.endereco}</CardTitle>
+                        <CardDescription>{imovel.cidade}, {imovel.estado}</CardDescription>
+                      </CardHeader>
+                      <CardContent className='p-0 pt-4'>
+                        <div className="font-bold text-xl text-green-600">
+                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(imovel.preco))}
+                        </div>
+                      </CardContent>
+                    </div>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+    </>
   );
 }
